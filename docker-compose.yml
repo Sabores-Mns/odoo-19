@@ -1,0 +1,37 @@
+name: odoo-19-mns
+
+services:
+  db:
+    container_name: db-odoo-19-mns
+    image: postgres:18
+    environment:
+      - POSTGRES_USER=odoo
+      - POSTGRES_PASSWORD=odoo19@2025
+      - POSTGRES_DB=postgres
+    ports:
+      - "5433:5432"
+    restart: always
+    volumes:
+      - ./postgresql:/var/lib/postgresql
+
+  odoo19:
+    container_name: odoo-19-mns
+    image: odoo:19
+    user: root
+    depends_on:
+      - db
+    ports:
+      - "10020:8069"
+      - "20019:8072"
+    tty: true
+    environment:
+      - HOST=db
+      - USER=odoo
+      - PASSWORD=odoo19@2025
+      - PIP_BREAK_SYSTEM_PACKAGES=1
+    volumes:
+      - ./entrypoint.sh:/entrypoint.sh
+      - ./addons:/mnt/extra-addons
+      - ./etc:/etc/odoo
+      - ./odoo_data:/var/lib/odoo
+    restart: always

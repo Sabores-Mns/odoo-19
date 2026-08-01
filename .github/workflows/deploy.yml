@@ -1,0 +1,37 @@
+name: Deploy Odoo 19 Docker
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy on Self-Hosted Runner
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy and Restart Services
+        run: |
+          echo "Starting production deployment..."
+          
+          # Set script and directory permissions
+          chmod +x entrypoint.sh || true
+          chmod -R 755 addons/ etc/ || true
+          
+          # Ensure Docker containers are running
+          echo "Running Docker Compose..."
+          docker compose up -d
+          
+          # Restart Odoo container to apply configuration changes and new addons
+          echo "Restarting Odoo service..."
+          docker compose restart odoo19
+          
+          # Prune unused docker images
+          docker image prune -f
+          
+          echo "Deployment completed successfully."

@@ -1,0 +1,7 @@
+postgresql/
+odoo_data/
+etc/odoo-server.log*
+etc/addons/
+etc/sessions/
+etc/filestore/
+.DS_Store
