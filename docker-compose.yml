@@ -12,7 +12,7 @@ services:
       - "5433:5432"
     restart: always
     volumes:
-      - ./postgresql:/var/lib/postgresql
+      - ${PG_DATA:-odoo19_pgdata}:/var/lib/postgresql
 
   odoo19:
     container_name: odoo-19-mns
@@ -33,5 +33,9 @@ services:
       - ./entrypoint.sh:/entrypoint.sh
       - ./addons:/mnt/extra-addons
       - ./etc:/etc/odoo
-      - ./odoo_data:/var/lib/odoo
+      - ${ODOO_DATA:-odoo19_filestore}:/var/lib/odoo
     restart: always
+
+volumes:
+  odoo19_pgdata:
+  odoo19_filestore:
