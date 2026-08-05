@@ -5,3 +5,27 @@ etc/addons/
 etc/sessions/
 etc/filestore/
 .DS_Store
+
+# --- Migración Profit -> Odoo 19 ---
+# El respaldo .bak de Profit (~220 MB) NUNCA debe subirse a GitHub.
+migration/db/*
+!migration/db/README.md
+!migration/db/.gitkeep
+
+# Salidas regenerables del ETL (se reconstruyen desde el .bak).
+migration/export/raw/
+migration/export/odoo_csv/
+migration/export/odoo_csv19/
+# Los planes de conciliación los regenera transform.py en cada corrida y
+# dependen del .bak, que no se versiona: fuera del repositorio.
+migration/export/plan/
+
+# Respaldos de la base migrada y reportes generados.
+migration/export/*.zip
+migration/export/verificacion*.md
+migration/export/test_odoo*.md
+migration/export/mismatch*.csv
+migration/export/*.log
+
+migration/**/__pycache__/
+migration/**/*.pyc

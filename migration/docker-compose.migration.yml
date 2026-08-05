@@ -1,0 +1,75 @@
+# Servicios auxiliares de la migración Profit -> Odoo 19.
+#
+# NO sustituye ni modifica el docker-compose.yml raíz: sólo añade el SQL Server
+# de origen y un contenedor Python que ejecuta el ETL. Ambos se enganchan a la
+# red que ya crea el stack principal (odoo-19-mns_default), así que el runner
+# alcanza Odoo en odoo-19-mns:8069 y Postgres en db-odoo-19-mns:5432.
+#
+# Al ser un archivo aparte, el workflow de deploy (.github/workflows/deploy.yml)
+# —que hace `docker compose up -d` sin -f— NUNCA levanta estos servicios en
+# producción.
+#
+# Uso:
+#   docker compose up -d                                        # stack raíz primero
+#   docker compose -f migration/docker-compose.migration.yml up -d
+
+name: profit-migration-19
+
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: migration_mssql
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Profit2Odoo!2026"
+      MSSQL_PID: "Developer"
+    ports:
+      # 1434 en el host, no 1433: el proyecto v17 (profit_mssql) tiene
+      # restart: unless-stopped y reclama el 1433 al reiniciar Docker, lo que
+      # impedía levantar este stack. El runner no se ve afectado —llega por la
+      # red interna a mssql:1433—; esto es sólo para conectar desde el host.
+      - "1434:1433"
+    volumes:
+      # El usuario deja aquí su respaldo .bak de Profit. Sólo lectura: el
+      # RESTORE no debe poder tocar el archivo original.
+      - ./db:/backups:ro
+      - mssql_data:/var/opt/mssql
+    restart: unless-stopped
+    networks:
+      - default
+
+  migrador:
+    image: python:3.12-slim
+    container_name: migration_runner
+    depends_on:
+      - mssql
+    working_dir: /migration
+    volumes:
+      # Todo el proyecto: etl/, ops/, export/, db/. Los CSV generados quedan
+      # en el host para poder inspeccionarlos.
+      - ./:/migration
+    environment:
+      MIGRATION_DIR: /migration
+      MSSQL_HOST: mssql
+      MSSQL_PORT: "1433"
+      MSSQL_DB: MULTI_A
+      ODOO_URL: "http://odoo-19-mns:8069"
+      ODOO_DB: "profit_migrado19"
+      ODOO_USER: "admin"
+      ODOO_PASSWORD: "admin"
+      PYTHONPATH: /migration/etl
+      PYTHONUNBUFFERED: "1"
+    command: tail -f /dev/null
+    restart: unless-stopped
+    networks:
+      - default
+
+volumes:
+  mssql_data:
+
+networks:
+  default:
+    # Red creada por el stack raíz (name: odoo-19-mns). Debe estar levantado
+    # antes; run-migration.ps1 lo garantiza.
+    name: odoo-19-mns_default
+    external: true

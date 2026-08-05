@@ -1,0 +1,18 @@
+# Dependencias del contenedor migration_runner (python:3.12-slim).
+#
+# NO confundir con etc/requirements.txt, que es del contenedor de Odoo.
+#
+# Instalación (la hace run-migration.ps1 en su fase 3):
+#   docker exec migration_runner pip install -r /migration/requirements.txt
+#
+# El resto del ETL corre sobre la biblioteca estándar: csv, json, os, re,
+# shutil, ssl, sys, datetime, collections, urllib.request y xmlrpc.client.
+
+# Cliente TDS puro-Python para SQL Server. Lo usan etl/extract.py y
+# etl/restore_mssql.py. Se prefiere a pyodbc porque no necesita el driver
+# ODBC del sistema ni compilación.
+python-tds==1.16.1
+
+# Scraping de la tasa oficial del BCV en ops/sync_bcv.py (post-migración,
+# no forma parte del ETL).
+beautifulsoup4==4.12.3
