@@ -1,0 +1,11 @@
+# -*- coding: utf-8 -*-
+# Part of Odoo. 
+
+from . import account
+from . import account_asset
+from . import account_asset_group
+from . import account_assets_report
+from . import account_chart_template
+from . import account_move
+from . import res_company
+from . import account_return
